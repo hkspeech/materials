@@ -50,6 +50,9 @@
                     <button onclick="changeCategory('sentence', this)" class="bg-white hover:bg-orange-50 text-slate-600 px-4 py-2 rounded-full font-medium border border-orange-200 transition">句子建構</button>
                     <button onclick="changeCategory('story', this)" class="bg-white hover:bg-orange-50 text-slate-600 px-4 py-2 rounded-full font-medium border border-orange-200 transition">故事敘述</button>
                     <button onclick="changeCategory('pronounce', this)" class="bg-white hover:bg-orange-50 text-slate-600 px-4 py-2 rounded-full font-medium border border-orange-200 transition">發音訓練</button>
+                    <button onclick="changeCategory('social', this)" class="bg-white hover:bg-orange-50 text-slate-600 px-4 py-2 rounded-full font-medium border border-orange-200 transition">社交訓練</button>
+                    <button onclick="changeCategory('game', this)" class="bg-white hover:bg-orange-50 text-slate-600 px-4 py-2 rounded-full font-medium border border-orange-200 transition">有趣遊戲</button>
+                    <button onclick="changeCategory('others', this)" class="bg-white hover:bg-orange-50 text-slate-600 px-4 py-2 rounded-full font-medium border border-orange-200 transition">其他教材</button>
                 </div>
             </section>
 
@@ -75,15 +78,13 @@
     </footer>
 
     <script>
-        // 🔐 Airtable 連線設定
         const AIRTABLE_BASE_ID = 'appavmqgjBcW6umdd';
         const AIRTABLE_TABLE_NAME = 'Table 1';
         const AIRTABLE_TOKEN = 'pat98TaonLaIXB1L9.8ccdee0d106bc0bda7fa4d987c5ef8b8a1623e0fd3df143fe89069eaa8d2d98b';
 
-        let myMaterials = []; // 用來儲存從 Airtable 拿到的教材資料
+        let myMaterials = []; 
         let currentCategory = 'all';
 
-        // 1. 🔒 密碼驗證設定
         function checkPassword() {
             const userInput = document.getElementById('password-input').value;
             const correctPassword = "clinic2026"; 
@@ -91,14 +92,13 @@
             if (userInput === correctPassword) {
                 document.getElementById('login-overlay').classList.add('hidden');
                 document.getElementById('main-content').classList.remove('hidden');
-                fetchDataFromAirtable(); // 登入成功，去 Airtable 攞資料
+                fetchDataFromAirtable(); 
             } else {
                 document.getElementById('error-msg').classList.remove('hidden');
                 document.getElementById('password-input').value = "";
             }
         }
 
-        // 2. 🌐 從 Airtable 讀取資料
         function fetchDataFromAirtable() {
             const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
             
@@ -109,15 +109,17 @@
             })
             .then(response => response.json())
             .then(data => {
-                // 將 Airtable 的格式轉換為網頁方便使用的格式
                 myMaterials = data.records.map(record => {
                     const fields = record.fields;
                     
-                    // 根據分類自動分配標籤顏色
-                    let badgeColor = "bg-orange-100 text-orange-800";
+                    // 💡 新增：為所有 7 個分類配對最靚嘅專屬顏色標籤
+                    let badgeColor = "bg-orange-100 text-orange-800"; // 預設句子建構為橙色
                     if (fields.category === 'babble') badgeColor = "bg-amber-100 text-amber-800";
                     if (fields.category === 'story') badgeColor = "bg-yellow-100 text-yellow-800";
                     if (fields.category === 'pronounce') badgeColor = "bg-red-100 text-red-800";
+                    if (fields.category === 'social') badgeColor = "bg-purple-100 text-purple-800"; // 社交為紫色
+                    if (fields.category === 'game') badgeColor = "bg-pink-100 text-pink-800";      // 遊戲為粉紅
+                    if (fields.category === 'others') badgeColor = "bg-slate-200 text-slate-800";   // 其他為灰色
 
                     return {
                         title: fields.title || '未命名教材',
@@ -129,18 +131,15 @@
                     };
                 });
 
-                // 隱藏 Loading 載入動畫
                 document.getElementById('loading-spinner').classList.add('hidden');
-                // 繪製卡片
                 renderMaterials();
             })
             .catch(error => {
                 console.error('Airtable 連線失敗:', error);
-                document.getElementById('loading-spinner').innerHTML = `<p class="text-red-500 text-sm">❌ 連線失敗，請檢查 Airtable 欄位設定或 Token 權限是否正確。</p>`;
+                document.getElementById('loading-spinner').innerHTML = `<p class="text-red-500 text-sm">❌ 連線失敗，請檢查 Airtable 欄位設定或 Token 權限。</p>`;
             });
         }
 
-        // 3. 🎨 網頁動態繪製系統
         function renderMaterials() {
             const grid = document.getElementById('materials-grid');
             grid.innerHTML = myMaterials.map(item => `
@@ -157,11 +156,9 @@
                 </div>
             `).join('');
             
-            // 繪製完後，執行一次篩選（確保維持當前分類）
             applyFilterAndSearch();
         }
 
-        // 4. 🎛️ 點擊分類按鈕時的切換處理
         function changeCategory(category, buttonElement) {
             currentCategory = category;
             const buttons = document.querySelectorAll('#filter-buttons button');
@@ -172,7 +169,6 @@
             applyFilterAndSearch();
         }
 
-        // 5. 🔍 核心功能：雙重過濾
         function applyFilterAndSearch() {
             const searchText = document.getElementById('search-input').value.toLowerCase().trim();
             const cards = document.querySelectorAll('.material-card');
