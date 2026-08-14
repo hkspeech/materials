@@ -11,25 +11,23 @@
     <!-- 登入頁面 -->
     <div id="login-overlay" class="fixed inset-0 bg-orange-500 flex flex-col justify-center items-center z-50 px-4">
         <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full text-center">
-            <!-- 換上完整包含文字的新 Logo -->
             <img src="Logo-title.png" alt="香港社區言語治療中心" class="h-24 mx-auto mb-4 object-contain">
-            <p class="text-slate-500 text-sm mb-6">請輸入家長專屬密碼以瀏覽教材</p>
+            <p class="text-slate-500 text-sm mb-6">請輸入您的家長專屬密碼</p>
             
             <input type="password" id="password-input" placeholder="請輸入密碼" 
                    onkeydown="if(event.key === 'Enter') checkPassword()"
-                   class="w-full px-4 py-3 border border-orange-200 rounded-xl mb-4 text-center focus:outline-none focus:ring-2 focus:ring-orange-500">
+                   class="w-full px-4 py-3 border border-orange-200 rounded-xl mb-4 text-center focus:outline-none focus:ring-2 focus:ring-orange-500 tracking-widest">
             
             <button onclick="checkPassword()" 
                     class="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 rounded-xl transition shadow-md">
-                進入網站
+                進入專屬教材庫
             </button>
-            <p id="error-msg" class="text-red-500 text-sm mt-3 hidden">❌ 密碼錯誤，請重新輸入</p>
+            <p id="error-msg" class="text-red-500 text-sm mt-3 hidden">❌ 請輸入密碼</p>
         </div>
     </div>
 
     <!-- 主頁面 -->
     <div id="main-content" class="hidden">
-        <!-- 頂部 Header 改為白底，襯托橙色 Logo -->
         <header class="bg-white text-slate-800 p-6 shadow-sm border-b border-orange-100 flex flex-col items-center justify-center">
             <img src="Logo-title.png" alt="香港社區言語治療中心" class="h-20 w-auto object-contain">
             <p class="text-xs mt-2 font-medium text-orange-600">家長資源網 · 陪小朋友在家輕鬆練習</p>
@@ -61,11 +59,11 @@
             </section>
 
             <section>
-                <h2 class="text-lg font-semibold mb-4 text-orange-700">📚 教材列表</h2>
+                <h2 class="text-lg font-semibold mb-4 text-orange-700">📚 您的專屬教材</h2>
                 
                 <div id="loading-spinner" class="text-center py-12">
                     <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-orange-500 border-t-transparent mb-2"></div>
-                    <p class="text-slate-400 text-sm">正在連線到 Airtable 讀取最新教材...</p>
+                    <p class="text-slate-400 text-sm">正在核對密碼並載入專屬教材...</p>
                 </div>
 
                 <p id="no-results" class="text-slate-400 text-sm italic py-8 text-center hidden">❌ 找不到符合條件的教材，請試試其他關鍵字。</p>
@@ -82,70 +80,88 @@
     </footer>
 
     <script>
-        const AIRTABLE_BASE_ID = 'appavmqgjBcW6umdd';[cite: 2]
-        const AIRTABLE_TABLE_NAME = 'Table 1';[cite: 2]
-        const AIRTABLE_TOKEN = 'pat98TaonLaIXB1L9.8ccdee0d106bc0bda7fa4d987c5ef8b8a1623e0fd3df143fe89069eaa8d2d98b';[cite: 2]
+        const AIRTABLE_BASE_ID = 'appavmqgjBcW6umdd';
+        const AIRTABLE_TABLE_NAME = 'Table 1';
+        const AIRTABLE_TOKEN = 'pat98TaonLaIXB1L9.8ccdee0d106bc0bda7fa4d987c5ef8b8a1623e0fd3df143fe89069eaa8d2d98b';
 
-        let myMaterials = [];[cite: 2]
-        let currentCategory = 'all';[cite: 2]
+        let myMaterials = []; 
+        let currentCategory = 'all';
 
         function checkPassword() {
-            const userInput = document.getElementById('password-input').value;[cite: 2]
-            const correctPassword = "clinic2026";[cite: 2]
+            const userInput = document.getElementById('password-input').value.trim();
 
-            if (userInput === correctPassword) {[cite: 2]
-                document.getElementById('login-overlay').classList.add('hidden');[cite: 2]
-                document.getElementById('main-content').classList.remove('hidden');[cite: 2]
-                fetchDataFromAirtable();[cite: 2]
-            } else {
-                document.getElementById('error-msg').classList.remove('hidden');[cite: 2]
-                document.getElementById('password-input').value = "";[cite: 2]
+            if (!userInput) {
+                const errorMsg = document.getElementById('error-msg');
+                errorMsg.innerText = "❌ 請先輸入密碼";
+                errorMsg.classList.remove('hidden');
+                return;
             }
+
+            // 進入載入畫面
+            document.getElementById('login-overlay').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            document.getElementById('loading-spinner').classList.remove('hidden');
+            
+            fetchDataFromAirtable(userInput); 
         }
 
-        function fetchDataFromAirtable() {
-            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
+        function fetchDataFromAirtable(userPassword) {
+            // 設定 Airtable 篩選公式：只拿取密碼符合的資料
+            let filterFormula = `{password} = '${userPassword}'`;
+            
+            // 管理員後門密碼：輸入 admin2026 即可看齊全中心所有教材
+            if (userPassword === 'admin2026') {
+                filterFormula = "NOT({title} = '')"; 
+            }
+
+            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}?filterByFormula=${encodeURIComponent(filterFormula)}`;
             
             fetch(url, {
                 headers: {
-                    Authorization: `Bearer ${AIRTABLE_TOKEN}`[cite: 2]
+                    Authorization: `Bearer ${AIRTABLE_TOKEN}`
                 }
             })
-            .then(response => response.json())[cite: 2]
+            .then(response => response.json())
             .then(data => {
-                myMaterials = data.records.map(record => {[cite: 2]
-                    const fields = record.fields;[cite: 2]
+                // 如果找不到任何紀錄，代表密碼錯，或者未有功課
+                if (!data.records || data.records.length === 0) {
+                    alert("❌ 密碼不正確，或目前未有您的專屬教材，請聯絡治療師。");
+                    location.reload(); // 重新整理網頁，回到登入畫面
+                    return;
+                }
+
+                myMaterials = data.records.map(record => {
+                    const fields = record.fields;
                     
-                    let badgeColor = "bg-orange-100 text-orange-800";[cite: 2]
-                    if (fields.category === 'babble') badgeColor = "bg-amber-100 text-amber-800";[cite: 2]
-                    if (fields.category === 'story') badgeColor = "bg-yellow-100 text-yellow-800";[cite: 2]
-                    if (fields.category === 'pronounce') badgeColor = "bg-red-100 text-red-800";[cite: 2]
-                    if (fields.category === 'social') badgeColor = "bg-purple-100 text-purple-800";[cite: 2]
-                    if (fields.category === 'game') badgeColor = "bg-pink-100 text-pink-800";[cite: 2]
-                    if (fields.category === 'others') badgeColor = "bg-slate-200 text-slate-800";[cite: 2]
+                    let badgeColor = "bg-orange-100 text-orange-800";
+                    if (fields.category === 'babble') badgeColor = "bg-amber-100 text-amber-800";
+                    if (fields.category === 'story') badgeColor = "bg-yellow-100 text-yellow-800";
+                    if (fields.category === 'pronounce') badgeColor = "bg-red-100 text-red-800";
+                    if (fields.category === 'social') badgeColor = "bg-purple-100 text-purple-800";
+                    if (fields.category === 'game') badgeColor = "bg-pink-100 text-pink-800";
+                    if (fields.category === 'others') badgeColor = "bg-slate-200 text-slate-800";
 
                     return {
-                        title: fields.title || '未命名教材',[cite: 2]
-                        category: fields.category || 'sentence',[cite: 2]
-                        categoryName: fields.categoryName || '句子建構',[cite: 2]
-                        description: fields.description || '暫無簡介。',[cite: 2]
-                        link: fields.link || '#',[cite: 2]
-                        badgeColor: badgeColor[cite: 2]
+                        title: fields.title || '未命名教材',
+                        category: fields.category || 'sentence',
+                        categoryName: fields.categoryName || '句子建構',
+                        description: fields.description || '暫無簡介。',
+                        link: fields.link || '#',
+                        badgeColor: badgeColor
                     };
                 });
 
-                document.getElementById('loading-spinner').classList.add('hidden');[cite: 2]
-                renderMaterials();[cite: 2]
+                document.getElementById('loading-spinner').classList.add('hidden');
+                renderMaterials();
             })
             .catch(error => {
-                console.error('Airtable 連線失敗:', error);[cite: 2]
-                document.getElementById('loading-spinner').innerHTML = `<p class="text-red-500 text-sm">❌ 連線失敗，請檢查 Airtable 欄位設定或 Token 權限。</p>`;[cite: 2]
+                console.error('Airtable 連線失敗:', error);
+                document.getElementById('loading-spinner').innerHTML = `<p class="text-red-500 text-sm">❌ 連線失敗，請檢查 Airtable 欄位設定或網絡連線。</p>`;
             });
         }
 
         function renderMaterials() {
-            const grid = document.getElementById('materials-grid');[cite: 2]
-            // 整格點擊下載[cite: 2]
+            const grid = document.getElementById('materials-grid');
             grid.innerHTML = myMaterials.map(item => `
                 <div onclick="window.open('${item.link}', '_blank')" 
                      class="material-card bg-white rounded-xl shadow-sm p-5 border border-orange-100 flex flex-col justify-between cursor-pointer transform hover:scale-[1.01] transition duration-200" 
@@ -160,47 +176,47 @@
                         <button class="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition shadow-sm">下載教材</button>
                     </div>
                 </div>
-            `).join('');[cite: 2]
+            `).join('');
             
-            applyFilterAndSearch();[cite: 2]
+            applyFilterAndSearch();
         }
 
         function changeCategory(category, buttonElement) {
-            currentCategory = category;[cite: 2]
-            const buttons = document.querySelectorAll('#filter-buttons button');[cite: 2]
+            currentCategory = category;
+            const buttons = document.querySelectorAll('#filter-buttons button');
             buttons.forEach(btn => {
-                btn.className = "bg-white hover:bg-orange-50 text-slate-600 px-4 py-2 rounded-full font-medium border border-orange-200 transition";[cite: 2]
+                btn.className = "bg-white hover:bg-orange-50 text-slate-600 px-4 py-2 rounded-full font-medium border border-orange-200 transition";
             });
-            buttonElement.className = "bg-orange-500 text-white px-4 py-2 rounded-full font-medium shadow-sm transition";[cite: 2]
-            applyFilterAndSearch();[cite: 2]
+            buttonElement.className = "bg-orange-500 text-white px-4 py-2 rounded-full font-medium shadow-sm transition";
+            applyFilterAndSearch();
         }
 
         function applyFilterAndSearch() {
-            const searchText = document.getElementById('search-input').value.toLowerCase().trim();[cite: 2]
-            const cards = document.querySelectorAll('.material-card');[cite: 2]
-            let visibleCount = 0;[cite: 2]
+            const searchText = document.getElementById('search-input').value.toLowerCase().trim();
+            const cards = document.querySelectorAll('.material-card');
+            let visibleCount = 0;
 
             cards.forEach(card => {
-                const cardCategory = card.getAttribute('data-category');[cite: 2]
-                const titleText = card.querySelector('h3').innerText.toLowerCase();[cite: 2]
-                const descText = card.querySelector('p').innerText.toLowerCase();[cite: 2]
+                const cardCategory = card.getAttribute('data-category');
+                const titleText = card.querySelector('h3').innerText.toLowerCase();
+                const descText = card.querySelector('p').innerText.toLowerCase();
 
-                const matchCategory = (currentCategory === 'all' || cardCategory === currentCategory);[cite: 2]
-                const matchSearch = (titleText.includes(searchText) || descText.includes(searchText));[cite: 2]
+                const matchCategory = (currentCategory === 'all' || cardCategory === currentCategory);
+                const matchSearch = (titleText.includes(searchText) || descText.includes(searchText));
 
                 if (matchCategory && matchSearch) {
-                    card.classList.remove('hidden');[cite: 2]
-                    visibleCount++;[cite: 2]
+                    card.classList.remove('hidden');
+                    visibleCount++;
                 } else {
-                    card.classList.add('hidden');[cite: 2]
+                    card.classList.add('hidden');
                 }
             });
 
-            const noResultsMsg = document.getElementById('no-results');[cite: 2]
-            if (visibleCount === 0 && myMaterials.length > 0) {[cite: 2]
-                noResultsMsg.classList.remove('hidden');[cite: 2]
+            const noResultsMsg = document.getElementById('no-results');
+            if (visibleCount === 0 && myMaterials.length > 0) {
+                noResultsMsg.classList.remove('hidden');
             } else {
-                noResultsMsg.classList.add('hidden');[cite: 2]
+                noResultsMsg.classList.add('hidden');
             }
         }
     </script>
