@@ -10,7 +10,8 @@
 
     <div id="login-overlay" class="fixed inset-0 bg-orange-500 flex flex-col justify-center items-center z-50 px-4">
         <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full text-center">
-            <h1 class="text-2xl font-bold text-orange-600 mb-2">🍊 香港社區言語治療中心</h1>
+            <!-- 1. 登入畫面換上新 Logo -->
+            <img src="Logo-title.png" alt="香港社區言語治療中心" class="h-16 mx-auto mb-4 object-contain">
             <p class="text-slate-500 text-sm mb-6">請輸入家長專屬密碼以瀏覽教材</p>
             
             <input type="password" id="password-input" placeholder="請輸入密碼" 
@@ -26,8 +27,9 @@
     </div>
 
     <div id="main-content" class="hidden">
-        <header class="bg-orange-500 text-white p-6 shadow-md text-center">
-            <h1 class="text-2xl font-bold">🍊 香港社區言語治療中心</h1>
+        <!-- 1. 主頁面頂部換上新 Logo -->
+        <header class="bg-orange-500 text-white p-6 shadow-md flex flex-col items-center justify-center">
+            <img src="Logo-title.png" alt="香港社區言語治療中心" class="h-16 w-auto object-contain brightness-0 invert">
             <p class="text-sm mt-2 font-light">家長資源網 · 陪小朋友在家輕鬆練習</p>
         </header>
 
@@ -67,7 +69,7 @@
                 <p id="no-results" class="text-slate-400 text-sm italic py-8 text-center hidden">❌ 找不到符合條件的教材，請試試其他關鍵字。</p>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="materials-grid">
-                    </div>
+                </div>
             </section>
 
         </main>
@@ -100,9 +102,10 @@
         }
 
         function fetchDataFromAirtable() {
-            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
+            const url = `https://api.nav.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`; // 這裡保持您原本 fetch 結構
+            const originalUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
             
-            fetch(url, {
+            fetch(originalUrl, {
                 headers: {
                     Authorization: `Bearer ${AIRTABLE_TOKEN}`
                 }
@@ -112,14 +115,13 @@
                 myMaterials = data.records.map(record => {
                     const fields = record.fields;
                     
-                    // 💡 新增：為所有 7 個分類配對最靚嘅專屬顏色標籤
-                    let badgeColor = "bg-orange-100 text-orange-800"; // 預設句子建構為橙色
+                    let badgeColor = "bg-orange-100 text-orange-800";
                     if (fields.category === 'babble') badgeColor = "bg-amber-100 text-amber-800";
                     if (fields.category === 'story') badgeColor = "bg-yellow-100 text-yellow-800";
                     if (fields.category === 'pronounce') badgeColor = "bg-red-100 text-red-800";
-                    if (fields.category === 'social') badgeColor = "bg-purple-100 text-purple-800"; // 社交為紫色
-                    if (fields.category === 'game') badgeColor = "bg-pink-100 text-pink-800";      // 遊戲為粉紅
-                    if (fields.category === 'others') badgeColor = "bg-slate-200 text-slate-800";   // 其他為灰色
+                    if (fields.category === 'social') badgeColor = "bg-purple-100 text-purple-800";
+                    if (fields.category === 'game') badgeColor = "bg-pink-100 text-pink-800";
+                    if (fields.category === 'others') badgeColor = "bg-slate-200 text-slate-800";
 
                     return {
                         title: fields.title || '未命名教材',
@@ -142,8 +144,11 @@
 
         function renderMaterials() {
             const grid = document.getElementById('materials-grid');
+            // 2. 這裡已更新：整格加上 onclick 下載，加了 cursor-pointer 手形游標，以及 hover 輕微放大特效
             grid.innerHTML = myMaterials.map(item => `
-                <div class="material-card bg-white rounded-xl shadow-sm p-5 border border-orange-100 flex flex-col justify-between" data-category="${item.category}">
+                <div onclick="window.open('${item.link}', '_blank')" 
+                     class="material-card bg-white rounded-xl shadow-sm p-5 border border-orange-100 flex flex-col justify-between cursor-pointer transform hover:scale-[1.01] transition duration-200" 
+                     data-category="${item.category}">
                     <div>
                         <span class="${item.badgeColor} text-xs font-semibold px-2.5 py-1 rounded">${item.categoryName}</span>
                         <h3 class="text-lg font-bold mt-2 text-slate-800">${item.title}</h3>
@@ -151,7 +156,7 @@
                     </div>
                     <div class="mt-4 flex justify-between items-center pt-3 border-t border-slate-50">
                         <span class="text-xs text-slate-400">教材文件</span>
-                        <a href="${item.link}" target="_blank" class="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition shadow-sm">下載教材</a>
+                        <button class="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition shadow-sm">下載教材</button>
                     </div>
                 </div>
             `).join('');
