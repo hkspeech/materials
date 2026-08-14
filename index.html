@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>香港社區言語治療中心 - 家長教材網</title>
+    
+    <!-- ✨ PWA App 設定 ✨ -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#f97316">
+    <link rel="apple-touch-icon" href="Logo-title.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-orange-50/30 text-slate-800 font-sans">
@@ -29,7 +35,6 @@
     <!-- 主頁面 -->
     <div id="main-content" class="hidden">
         
-        <!-- 通告版 -->
         <div id="announcement-banner" class="hidden bg-red-500 text-white text-center py-2 px-4 text-sm font-medium shadow-sm">
             <span id="announcement-text"></span>
         </div>
@@ -38,7 +43,6 @@
             <img src="Logo-title.png" alt="香港社區言語治療中心" class="h-20 w-auto object-contain">
             <p class="text-xs mt-2 font-medium text-orange-600">家長資源網 · 陪小朋友在家輕鬆練習</p>
             
-            <!-- 獎勵星星機制 -->
             <div id="user-profile-section" class="hidden absolute top-4 right-4 bg-orange-50 border border-orange-200 rounded-full px-4 py-1.5 shadow-sm flex items-center gap-2">
                 <span class="text-sm font-bold text-slate-700">👋 <span id="student-name-display"></span></span>
                 <span class="text-sm font-bold text-orange-500">⭐ <span id="student-stars-display"></span></span>
@@ -90,6 +94,17 @@
     <footer class="text-center text-slate-400 text-xs my-12">
         &copy; 2026 香港社區言語治療中心. 版權所有.
     </footer>
+
+    <!-- ✨ PWA Service Worker 註冊腳本 ✨ -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker 註冊成功'))
+                    .catch(err => console.log('Service Worker 註冊失敗', err));
+            });
+        }
+    </script>
 
     <script>
         const AIRTABLE_BASE_ID = 'appavmqgjBcW6umdd';
@@ -189,31 +204,26 @@
             const grid = document.getElementById('materials-grid');
             grid.innerHTML = myMaterials.map(item => {
                 
-                // 📤 交功課按鈕 (如果有的話，顯示在文字描述下方)
                 let feedbackBtn = item.feedbackLink ? `<button onclick="event.stopPropagation(); window.open('${item.feedbackLink}', '_blank')" class="bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition mt-2 inline-block">📤 交功課</button>` : '';
 
-                // 💡 智能判斷：究竟係影片定係文件？
                 let hasVideo = item.youtubeLink && item.youtubeLink.trim() !== '';
                 let hasFile = item.link && item.link.trim() !== '' && item.link !== '#';
 
                 let clickAction, btnClass, btnText, typeLabel, cursorClass;
 
                 if (hasVideo) {
-                    // 如果是影片
                     clickAction = `window.open('${item.youtubeLink}', '_blank')`;
                     btnClass = "bg-red-500 hover:bg-red-600 text-white";
                     btnText = "▶️ 觀看影片";
                     typeLabel = "教學影片";
                     cursorClass = "cursor-pointer hover:scale-[1.01]";
                 } else if (hasFile) {
-                    // 如果是文件
                     clickAction = `window.open('${item.link}', '_blank')`;
                     btnClass = "bg-orange-500 hover:bg-orange-600 text-white";
                     btnText = "下載教材";
                     typeLabel = "教材文件";
                     cursorClass = "cursor-pointer hover:scale-[1.01]";
                 } else {
-                    // 如果兩者皆空
                     clickAction = `alert('⚠️ 治療師尚未上載此教材！');`;
                     btnClass = "bg-gray-200 text-gray-500 cursor-not-allowed";
                     btnText = "準備中";
@@ -232,7 +242,6 @@
                         ${feedbackBtn}
                     </div>
                     
-                    <!-- 卡片底部：動態顯示影片或下載按鈕 -->
                     <div class="mt-4 flex justify-between items-center pt-3 border-t border-slate-50">
                         <span class="text-xs text-slate-400">${typeLabel}</span>
                         <button class="${btnClass} text-sm font-medium px-4 py-2 rounded-lg transition shadow-sm">${btnText}</button>
