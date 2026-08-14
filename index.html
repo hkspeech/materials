@@ -205,10 +205,25 @@
                     document.getElementById('user-profile-section').classList.remove('hidden');
                 }
 
-                // ✨ 處理進度儀表板 (智能隱藏機制) ✨
+         // ✨ 處理進度儀表板 (智能搜尋 + 自動隱藏機制) ✨
                 const progressContainer = document.getElementById('progress-bars-container');
                 const progressDashboard = document.getElementById('progress-dashboard');
                 let progressHTML = '';
+                
+                // 聰明地搜尋：行勻所有屬於呢個學生嘅資料，搵吓有冇目標
+                let foundGoal1Name = '', foundGoal1Progress = 0;
+                let foundGoal2Name = '', foundGoal2Progress = 0;
+                
+                for (let record of data.records) {
+                    if (!foundGoal1Name && record.fields.goal_1_name) {
+                        foundGoal1Name = record.fields.goal_1_name;
+                        foundGoal1Progress = record.fields.goal_1_progress || 0;
+                    }
+                    if (!foundGoal2Name && record.fields.goal_2_name) {
+                        foundGoal2Name = record.fields.goal_2_name;
+                        foundGoal2Progress = record.fields.goal_2_progress || 0;
+                    }
+                }
 
                 function generateProgressBar(name, progress) {
                     let p = Math.min(Math.max(progress || 0, 0), 100); 
@@ -229,12 +244,8 @@
                     `;
                 }
 
-                if (firstRecord.goal_1_name) {
-                    progressHTML += generateProgressBar(firstRecord.goal_1_name, firstRecord.goal_1_progress);
-                }
-                if (firstRecord.goal_2_name) {
-                    progressHTML += generateProgressBar(firstRecord.goal_2_name, firstRecord.goal_2_progress);
-                }
+                if (foundGoal1Name) progressHTML += generateProgressBar(foundGoal1Name, foundGoal1Progress);
+                if (foundGoal2Name) progressHTML += generateProgressBar(foundGoal2Name, foundGoal2Progress);
 
                 if (progressHTML !== '') {
                     progressContainer.innerHTML = progressHTML;
