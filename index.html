@@ -28,9 +28,21 @@
 
     <!-- 主頁面 -->
     <div id="main-content" class="hidden">
-        <header class="bg-white text-slate-800 p-6 shadow-sm border-b border-orange-100 flex flex-col items-center justify-center">
+        
+        <!-- ✨ 1. 中心最新通告版 (預設隱藏，有字先出) -->
+        <div id="announcement-banner" class="hidden bg-red-500 text-white text-center py-2 px-4 text-sm font-medium shadow-sm">
+            <span id="announcement-text"></span>
+        </div>
+
+        <header class="bg-white text-slate-800 p-6 shadow-sm border-b border-orange-100 flex flex-col items-center justify-center relative">
             <img src="Logo-title.png" alt="香港社區言語治療中心" class="h-20 w-auto object-contain">
             <p class="text-xs mt-2 font-medium text-orange-600">家長資源網 · 陪小朋友在家輕鬆練習</p>
+            
+            <!-- ✨ 5. 獎勵星星機制 (右上角顯示) -->
+            <div id="user-profile-section" class="hidden absolute top-4 right-4 bg-orange-50 border border-orange-200 rounded-full px-4 py-1.5 shadow-sm flex items-center gap-2">
+                <span class="text-sm font-bold text-slate-700">👋 <span id="student-name-display"></span></span>
+                <span class="text-sm font-bold text-orange-500">⭐ <span id="student-stars-display"></span></span>
+            </div>
         </header>
 
         <main class="max-w-4xl mx-auto p-6">
@@ -97,42 +109,57 @@
                 return;
             }
 
-            // 進入載入畫面
             document.getElementById('login-overlay').classList.add('hidden');
             document.getElementById('main-content').classList.remove('hidden');
             document.getElementById('loading-spinner').classList.remove('hidden');
             
+            // 抓取通告 & 教材
+            fetchAnnouncements();
             fetchDataFromAirtable(userInput); 
         }
 
+        // ✨ 讀取通告版功能
+        function fetchAnnouncements() {
+            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Announcements`;
+            fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } })
+            .then(res => res.json())
+            .then(data => {
+                if (data.records && data.records.length > 0) {
+                    const firstMsg = data.records[0].fields.message;
+                    if (firstMsg) {
+                        document.getElementById('announcement-text').innerText = "📢 " + firstMsg;
+                        document.getElementById('announcement-banner').classList.remove('hidden');
+                    }
+                }
+            }).catch(e => console.log('找不到通告表', e));
+        }
+
+        // 讀取個人專屬教材
         function fetchDataFromAirtable(userPassword) {
-            // 設定 Airtable 篩選公式：只拿取密碼符合的資料
             let filterFormula = `{password} = '${userPassword}'`;
-            
-            // 管理員後門密碼：輸入 admin2026 即可看齊全中心所有教材
-            if (userPassword === 'admin2026') {
-                filterFormula = "NOT({title} = '')"; 
-            }
+            if (userPassword === 'admin2026') filterFormula = "NOT({title} = '')"; 
 
             const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}?filterByFormula=${encodeURIComponent(filterFormula)}`;
             
-            fetch(url, {
-                headers: {
-                    Authorization: `Bearer ${AIRTABLE_TOKEN}`
-                }
-            })
+            fetch(url, { headers: { Authorization: `Bearer ${AIRTABLE_TOKEN}` } })
             .then(response => response.json())
             .then(data => {
-                // 如果找不到任何紀錄，代表密碼錯，或者未有功課
                 if (!data.records || data.records.length === 0) {
                     alert("❌ 密碼不正確，或目前未有您的專屬教材，請聯絡治療師。");
-                    location.reload(); // 重新整理網頁，回到登入畫面
+                    location.reload(); 
                     return;
+                }
+
+                // ✨ 提取小朋友名字及星星
+                const firstRecord = data.records[0].fields;
+                if (firstRecord.student_name) {
+                    document.getElementById('student-name-display').innerText = firstRecord.student_name;
+                    document.getElementById('student-stars-display').innerText = firstRecord.stars || '0';
+                    document.getElementById('user-profile-section').classList.remove('hidden');
                 }
 
                 myMaterials = data.records.map(record => {
                     const fields = record.fields;
-                    
                     let badgeColor = "bg-orange-100 text-orange-800";
                     if (fields.category === 'babble') badgeColor = "bg-amber-100 text-amber-800";
                     if (fields.category === 'story') badgeColor = "bg-yellow-100 text-yellow-800";
@@ -147,7 +174,9 @@
                         categoryName: fields.categoryName || '句子建構',
                         description: fields.description || '暫無簡介。',
                         link: fields.link || '#',
-                        badgeColor: badgeColor
+                        badgeColor: badgeColor,
+                        youtubeLink: fields.youtube_link || '', // ✨ 提取 YouTube 連結
+                        feedbackLink: fields.feedback_link || '' // ✨ 提取交功課連結
                     };
                 });
 
@@ -162,21 +191,35 @@
 
         function renderMaterials() {
             const grid = document.getElementById('materials-grid');
-            grid.innerHTML = myMaterials.map(item => `
+            grid.innerHTML = myMaterials.map(item => {
+                
+                // ✨ 2. 影片按鈕 (如果有 Link 先出現)
+                let youtubeBtn = item.youtubeLink ? `<button onclick="event.stopPropagation(); window.open('${item.youtubeLink}', '_blank')" class="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition mr-2">▶️ 觀看影片</button>` : '';
+                
+                // ✨ 3. 交功課按鈕 (如果有 Link 先出現)
+                let feedbackBtn = item.feedbackLink ? `<button onclick="event.stopPropagation(); window.open('${item.feedbackLink}', '_blank')" class="bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition mr-2">📤 交功課</button>` : '';
+
+                return `
                 <div onclick="window.open('${item.link}', '_blank')" 
                      class="material-card bg-white rounded-xl shadow-sm p-5 border border-orange-100 flex flex-col justify-between cursor-pointer transform hover:scale-[1.01] transition duration-200" 
                      data-category="${item.category}">
                     <div>
                         <span class="${item.badgeColor} text-xs font-semibold px-2.5 py-1 rounded">${item.categoryName}</span>
                         <h3 class="text-lg font-bold mt-2 text-slate-800">${item.title}</h3>
-                        <p class="text-slate-500 text-sm mt-1 text-justify">${item.description}</p>
+                        <p class="text-slate-500 text-sm mt-1 text-justify mb-3">${item.description}</p>
+                        
+                        <!-- 顯示影片與交功課按鈕 -->
+                        <div class="flex items-center">
+                            ${youtubeBtn}
+                            ${feedbackBtn}
+                        </div>
                     </div>
                     <div class="mt-4 flex justify-between items-center pt-3 border-t border-slate-50">
                         <span class="text-xs text-slate-400">教材文件</span>
                         <button class="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition shadow-sm">下載教材</button>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
             
             applyFilterAndSearch();
         }
