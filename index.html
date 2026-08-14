@@ -52,25 +52,20 @@
         </header>
 
         <main class="max-w-4xl mx-auto p-6">
-         <!-- ✨ 新增：中心廣告及 WhatsApp 查詢區 ✨ -->
+            
+            <!-- 中心廣告及 WhatsApp 查詢區 -->
             <section class="mb-8 mt-2">
                 <div class="bg-gradient-to-r from-orange-400 to-amber-500 rounded-2xl p-6 text-white shadow-md relative overflow-hidden">
-                    <!-- 背景裝飾圓圈 -->
                     <div class="absolute -right-6 -top-6 w-32 h-32 bg-white opacity-10 rounded-full"></div>
                     <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white opacity-10 rounded-full"></div>
                     
                     <div class="relative z-10">
                         <span class="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full mb-3 inline-block">✨ 最新推介</span>
+                        <h2 class="text-xl font-bold mb-2">🗣️ 2026 秋季兒童社交溝通小組</h2>
+                        <p class="text-sm text-orange-50 mb-4 leading-relaxed">現正接受報名！2人同行即享 85 折優惠。適合 3-5 歲幼兒，透過集體遊戲提升對答及眼神接觸技巧，名額有限！</p>
                         
-                        <!-- 廣告標題及內容 -->
-                        <h2 class="text-xl font-bold mb-2">🗣️ 2026 小學開學適應小組</h2>
-                        <p class="text-sm text-orange-50 mb-4 leading-relaxed">現正接受報名！首4堂享有$800/4堂優惠。適合小一學童，透過小組形式鍛鍊小一需要的語言、社交、讀寫技巧，盡早適應小一生活！</p>
-                        
-                        <!-- WhatsApp 按鈕 -->
-                        <!-- ⚠️ 記得將下面 85212345678 改做你哋中心嘅 WhatsApp 號碼 -->
-                        <button onclick="window.open('https://wa.me/85252277189?text=你好，我想查詢關於言語治療的詳情！', '_blank')" 
+                        <button onclick="window.open('https://wa.me/85212345678?text=你好，我想查詢關於【秋季社交小組】的詳情！', '_blank')" 
                                 class="bg-white text-orange-600 font-bold text-sm px-5 py-2.5 rounded-xl shadow-sm hover:bg-orange-50 hover:scale-105 transition duration-200 inline-flex items-center gap-2">
-                            <!-- WhatsApp Icon -->
                             <svg class="w-5 h-5 fill-current text-green-500" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
                             </svg>
@@ -78,7 +73,16 @@
                         </button>
                     </div>
                 </div>
-            </section>   
+            </section>
+
+            <!-- 專屬訓練里程碑 (自動隱藏機制) -->
+            <section id="progress-dashboard" class="mb-6 hidden">
+                <h2 class="text-lg font-semibold mb-3 text-orange-700">🎯 本月專屬訓練里程碑</h2>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-orange-100" id="progress-bars-container">
+                    <!-- 進度條會用 JS 動態生成喺度 -->
+                </div>
+            </section>
+
             <section class="mb-6">
                 <div class="relative max-w-md">
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">🔍</span>
@@ -140,7 +144,6 @@
         let myMaterials = []; 
         let currentCategory = 'all';
         
-        // ✨ 新增：用來記錄目前學生的資料，方便更新星星
         let currentUserRecordIds = []; 
         let currentStars = 0;
 
@@ -177,7 +180,7 @@
             }).catch(e => console.log('未設定通告表，略過顯示'));
         }
 
-       function fetchDataFromAirtable(userPassword) {
+        function fetchDataFromAirtable(userPassword) {
             let filterFormula = `{password} = '${userPassword}'`;
             if (userPassword === 'admin2026') filterFormula = "NOT({title} = '')"; 
 
@@ -192,7 +195,6 @@
                     return;
                 }
 
-                // 儲存該學生的所有 Airtable Record ID 及目前星星數
                 currentUserRecordIds = data.records.map(r => r.id);
                 currentStars = data.records[0].fields.stars || 0;
 
@@ -203,7 +205,7 @@
                     document.getElementById('user-profile-section').classList.remove('hidden');
                 }
 
-                // ✨✨✨ 新增：處理進度儀表板 (智能隱藏機制) ✨✨✨
+                // ✨ 處理進度儀表板 (智能隱藏機制) ✨
                 const progressContainer = document.getElementById('progress-bars-container');
                 const progressDashboard = document.getElementById('progress-dashboard');
                 let progressHTML = '';
@@ -234,14 +236,12 @@
                     progressHTML += generateProgressBar(firstRecord.goal_2_name, firstRecord.goal_2_progress);
                 }
 
-                // 如果有目標，就顯示儀表板；否則繼續隱藏
                 if (progressHTML !== '') {
                     progressContainer.innerHTML = progressHTML;
                     progressDashboard.classList.remove('hidden');
                 } else {
                     progressDashboard.classList.add('hidden');
                 }
-                // ✨✨✨ 進度儀表板代碼完結 ✨✨✨
 
                 myMaterials = data.records.map(record => {
                     const fields = record.fields;
@@ -274,21 +274,17 @@
                 document.getElementById('loading-spinner').innerHTML = `<p class="text-red-500 text-sm">❌ 連線失敗，請檢查 Airtable 欄位設定或網絡連線。</p>`;
             });
         }
-        // ✨ 領取星星的核心功能
+
         function claimStar(btnElement) {
-            // 1. 阻止點擊事件向外傳遞（以免誤開功課連結）
             event.stopPropagation();
 
-            // 2. 增加星星數量並更新 UI
             currentStars += 1;
             document.getElementById('student-stars-display').innerText = currentStars;
             
-            // 3. 讓星星圖案跳動一下，增加成功感
             const starIcon = document.getElementById('star-icon');
             starIcon.classList.add('scale-150');
             setTimeout(() => starIcon.classList.remove('scale-150'), 300);
 
-            // 4. 將按鈕變更為「已領取」狀態
             btnElement.disabled = true;
             btnElement.innerText = "✅ 已領取";
             btnElement.classList.replace('bg-yellow-400', 'bg-slate-100');
@@ -297,14 +293,12 @@
             btnElement.classList.remove('shadow-sm', 'border-yellow-400');
             btnElement.classList.add('border', 'border-slate-200', 'cursor-not-allowed');
 
-            // 5. 背景自動更新 Airtable
             updateStarsInAirtable(currentStars);
         }
 
         function updateStarsInAirtable(newStars) {
             const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}`;
             
-            // Airtable API 每次最多可以批量更新 10 筆資料
             for (let i = 0; i < currentUserRecordIds.length; i += 10) {
                 const chunk = currentUserRecordIds.slice(i, i + 10);
                 const payload = {
@@ -331,7 +325,6 @@
                 
                 let feedbackBtn = item.feedbackLink ? `<button onclick="event.stopPropagation(); window.open('${item.feedbackLink}', '_blank')" class="bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition mt-2 mr-2 inline-block">📤 交功課</button>` : '';
                 
-                // ✨ 新增：領取星星按鈕
                 let starBtn = `<button onclick="claimStar(this)" class="bg-yellow-400 hover:bg-yellow-500 text-white border border-yellow-400 text-xs font-semibold px-3 py-1.5 rounded-lg transition mt-2 inline-block shadow-sm">🌟 完成！領取星星</button>`;
 
                 let hasVideo = item.youtubeLink && item.youtubeLink.trim() !== '';
@@ -368,7 +361,6 @@
                         <h3 class="text-lg font-bold mt-2 text-slate-800">${item.title}</h3>
                         <p class="text-slate-500 text-sm mt-1 text-justify mb-2">${item.description}</p>
                         
-                        <!-- 顯示按鈕區 -->
                         <div class="flex flex-wrap items-center">
                             ${feedbackBtn}
                             ${starBtn}
