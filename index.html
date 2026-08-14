@@ -177,7 +177,7 @@
             }).catch(e => console.log('未設定通告表，略過顯示'));
         }
 
-        function fetchDataFromAirtable(userPassword) {
+       function fetchDataFromAirtable(userPassword) {
             let filterFormula = `{password} = '${userPassword}'`;
             if (userPassword === 'admin2026') filterFormula = "NOT({title} = '')"; 
 
@@ -192,7 +192,7 @@
                     return;
                 }
 
-                // ✨ 儲存該學生的所有 Airtable Record ID 及目前星星數
+                // 儲存該學生的所有 Airtable Record ID 及目前星星數
                 currentUserRecordIds = data.records.map(r => r.id);
                 currentStars = data.records[0].fields.stars || 0;
 
@@ -202,6 +202,46 @@
                     document.getElementById('student-stars-display').innerText = currentStars;
                     document.getElementById('user-profile-section').classList.remove('hidden');
                 }
+
+                // ✨✨✨ 新增：處理進度儀表板 (智能隱藏機制) ✨✨✨
+                const progressContainer = document.getElementById('progress-bars-container');
+                const progressDashboard = document.getElementById('progress-dashboard');
+                let progressHTML = '';
+
+                function generateProgressBar(name, progress) {
+                    let p = Math.min(Math.max(progress || 0, 0), 100); 
+                    let isComplete = p >= 100;
+                    let barColor = isComplete ? 'bg-green-500' : 'bg-orange-500';
+                    let statusText = isComplete ? '⭐ 已達標' : `${p}%`;
+                    
+                    return `
+                    <div class="mb-5 last:mb-0">
+                        <div class="flex justify-between items-end mb-2">
+                            <span class="text-sm font-bold text-slate-700">${name}</span>
+                            <span class="text-xs font-bold ${isComplete ? 'text-green-600' : 'text-orange-600'}">${statusText}</span>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-2.5 shadow-inner">
+                            <div class="${barColor} h-2.5 rounded-full transition-all duration-1000 ease-out" style="width: ${p}%"></div>
+                        </div>
+                    </div>
+                    `;
+                }
+
+                if (firstRecord.goal_1_name) {
+                    progressHTML += generateProgressBar(firstRecord.goal_1_name, firstRecord.goal_1_progress);
+                }
+                if (firstRecord.goal_2_name) {
+                    progressHTML += generateProgressBar(firstRecord.goal_2_name, firstRecord.goal_2_progress);
+                }
+
+                // 如果有目標，就顯示儀表板；否則繼續隱藏
+                if (progressHTML !== '') {
+                    progressContainer.innerHTML = progressHTML;
+                    progressDashboard.classList.remove('hidden');
+                } else {
+                    progressDashboard.classList.add('hidden');
+                }
+                // ✨✨✨ 進度儀表板代碼完結 ✨✨✨
 
                 myMaterials = data.records.map(record => {
                     const fields = record.fields;
@@ -234,7 +274,6 @@
                 document.getElementById('loading-spinner').innerHTML = `<p class="text-red-500 text-sm">❌ 連線失敗，請檢查 Airtable 欄位設定或網絡連線。</p>`;
             });
         }
-
         // ✨ 領取星星的核心功能
         function claimStar(btnElement) {
             // 1. 阻止點擊事件向外傳遞（以免誤開功課連結）
