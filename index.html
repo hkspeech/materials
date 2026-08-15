@@ -211,7 +211,7 @@
 
         function logLoginToAirtable(studentName) {
             const logUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/Login_Log`;
-            const now = new Date().toLocaleString('zh-HK', { timeZone: 'Asia/Hong Kong' });
+            const now = new Date().toLocaleString('zh-HK', { timeZone: 'Asia/Hong_Kong' });
             const payload = { records: [{ fields: { student_name: studentName, login_time: now } }] };
 
             fetch(logUrl, {
