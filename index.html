@@ -322,31 +322,38 @@
                         progressDashboard.classList.add('hidden');
                     }
 
-                    myMaterials = data.records.map(record => {
-                        const fields = record.fields;
-                        let badgeColor = "bg-orange-100 text-orange-800";
-                        if (fields.category === 'babble') badgeColor = "bg-amber-100 text-amber-800";
-                        if (fields.category === 'story') badgeColor = "bg-yellow-100 text-yellow-800";
-                        if (fields.category === 'pronounce') badgeColor = "bg-red-100 text-red-800";
-                        if (fields.category === 'social') badgeColor = "bg-purple-100 text-purple-800";
-                        if (fields.category === 'game') badgeColor = "bg-pink-100 text-pink-800";
-                        if (fields.category === 'others') badgeColor = "bg-slate-200 text-slate-800";
+                myMaterials = data.records.map(record => {
+                    const fields = record.fields;
+                    let badgeColor = "bg-orange-100 text-orange-800";
+                    if (fields.category === 'babble') badgeColor = "bg-amber-100 text-amber-800";
+                    if (fields.category === 'story') badgeColor = "bg-yellow-100 text-yellow-800";
+                    if (fields.category === 'pronounce') badgeColor = "bg-red-100 text-red-800";
+                    if (fields.category === 'social') badgeColor = "bg-purple-100 text-purple-800";
+                    if (fields.category === 'game') badgeColor = "bg-pink-100 text-pink-800";
+                    if (fields.category === 'others') badgeColor = "bg-slate-200 text-slate-800";
 
-                        return {
-                            id: record.id,
-                            title: fields.title || '未命名教材',
-                            category: fields.category || 'sentence',
-                            categoryName: fields.categoryName || '句子建構',
-                            description: fields.description || '暫無簡介。',
-                            link: fields.link || '#',
-                            badgeColor: badgeColor,
-                            youtubeLink: fields.youtube_link || '', 
-                            feedbackLink: fields.feedback_link || '' 
-                        };
-                    });
+                    // ✨ 新增：處理預覽圖邏輯 ✨
+                    let imageUrl = 'Logo-title.png'; // 預設用中心 Logo 頂上
+                    if (fields.preview_image && fields.preview_image.length > 0) {
+                        imageUrl = fields.preview_image[0].url; // 讀取 Airtable 上載嘅圖
+                    }
 
-                    document.getElementById('loading-spinner').classList.add('hidden');
-                    renderMaterials();
+                    return {
+                        id: record.id,
+                        title: fields.title || '未命名教材',
+                        category: fields.category || 'sentence',
+                        categoryName: fields.categoryName || '句子建構',
+                        description: fields.description || '暫無簡介。',
+                        link: fields.link || '#',
+                        badgeColor: badgeColor,
+                        youtubeLink: fields.youtube_link || '', 
+                        feedbackLink: fields.feedback_link || '',
+                        previewImage: imageUrl // ✨ 儲存圖片網址
+                    };
+                });
+
+                document.getElementById('loading-spinner').classList.add('hidden');
+                renderMaterials();
                     
                 } catch (renderError) {
                     // 如果係代碼出錯，會直接顯示喺畫面度！
@@ -395,7 +402,7 @@
             }
         }
 
-        function renderMaterials() {
+       function renderMaterials() {
             const grid = document.getElementById('materials-grid');
             grid.innerHTML = myMaterials.map(item => {
                 
@@ -429,20 +436,29 @@
 
                 return `
                 <div onclick="${clickAction}" 
-                     class="material-card bg-white rounded-xl shadow-sm p-5 border border-orange-100 flex flex-col justify-between ${cursorClass} transform transition duration-200" 
+                     class="material-card bg-white rounded-xl shadow-sm border border-orange-100 flex flex-col overflow-hidden ${cursorClass} transform transition duration-200" 
                      data-category="${item.category}">
-                    <div>
-                        <span class="${item.badgeColor} text-xs font-semibold px-2.5 py-1 rounded">${item.categoryName}</span>
-                        <h3 class="text-lg font-bold mt-2 text-slate-800">${item.title}</h3>
-                        <p class="text-slate-500 text-sm mt-1 text-justify mb-2">${item.description}</p>
-                        <div class="flex flex-wrap items-center">
-                            ${feedbackBtn}
-                            ${starBtn}
-                        </div>
+                    
+                    <!-- ✨ 新增：超靚預覽圖區塊 ✨ -->
+                    <div class="h-40 w-full bg-slate-50 bg-cover bg-center border-b border-orange-50 relative" 
+                         style="background-image: url('${item.previewImage}'); ${item.previewImage === 'Logo-title.png' ? 'background-size: contain; background-repeat: no-repeat;' : ''}">
                     </div>
-                    <div class="mt-4 flex justify-between items-center pt-3 border-t border-slate-50">
-                        <span class="text-xs text-slate-400">${typeLabel}</span>
-                        <button class="${btnClass} text-sm font-medium px-4 py-2 rounded-lg transition shadow-sm">${btnText}</button>
+                    
+                    <!-- 卡片文字內容區 -->
+                    <div class="p-5 flex flex-col flex-grow justify-between">
+                        <div>
+                            <span class="${item.badgeColor} text-xs font-semibold px-2.5 py-1 rounded">${item.categoryName}</span>
+                            <h3 class="text-lg font-bold mt-2 text-slate-800">${item.title}</h3>
+                            <p class="text-slate-500 text-sm mt-1 text-justify mb-2">${item.description}</p>
+                            <div class="flex flex-wrap items-center mt-2">
+                                ${feedbackBtn}
+                                ${starBtn}
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center pt-3 border-t border-slate-50">
+                            <span class="text-xs text-slate-400">${typeLabel}</span>
+                            <button class="${btnClass} text-sm font-medium px-4 py-2 rounded-lg transition shadow-sm">${btnText}</button>
+                        </div>
                     </div>
                 </div>
             `}).join('');
