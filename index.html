@@ -266,7 +266,8 @@
                     }
 
                     currentUserRecordIds = data.records.map(r => r.id);
-                    currentStars = data.records[0].fields.stars || 0;
+                    const allStars = data.records.map(r => r.fields.stars || 0);
+currentStars = allStars.length > 0 ? Math.max(...allStars) : 0;
 
                     const firstRecord = data.records[0].fields;
                     if (firstRecord.student_name) {
@@ -388,8 +389,8 @@
             // 準備要更新嘅資料：將該教材嘅 star_claimed 設為 true
             const data = {
                 fields: {
-                    "star_claimed": true
-                    // 如果你本身有將 currentStars 寫入 Airtable 嘅欄位，都可以喺度加埋，例如 "stars": currentStars
+                    "star_claimed": true,
+                    "stars": currentStars // ✨ 新增呢行：真正將最新嘅星星總數寫返入 Airtable
                 }
             };
 
