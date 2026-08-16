@@ -434,7 +434,7 @@ currentStars = allStars.length > 0 ? Math.max(...allStars) : 0;
                 if (item.starClaimed) {
                     starBtn = `<button disabled class="bg-gray-200 text-gray-400 border border-gray-200 text-xs font-semibold px-3 py-1.5 rounded-lg mt-2 inline-block shadow-sm cursor-not-allowed">⭐ 已領取</button>`;
                 } else {
-                    starBtn = `<button onclick="claimStar(this, '${item.id}')" class="bg-yellow-400 hover:bg-yellow-500 text-white border border-yellow-400 text-xs font-semibold px-3 py-1.5 rounded-lg transition mt-2 inline-block shadow-sm">🌟 完成！領取星星</button>`;
+                    starBtn = `<button onclick="claimStar(this, '${item.id}', event)" class="bg-yellow-400 hover:bg-yellow-500 text-white border border-yellow-400 text-xs font-semibold px-3 py-1.5 rounded-lg transition mt-2 inline-block shadow-sm">🌟 完成！領取星星</button>`;
                 }
                 let hasVideo = item.youtubeLink && item.youtubeLink.trim() !== '';
                 let hasFile = item.link && item.link.trim() !== '' && item.link !== '#';
