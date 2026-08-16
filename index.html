@@ -339,17 +339,18 @@
                     }
 
                     return {
-                        id: record.id,
-                        title: fields.title || '未命名教材',
-                        category: fields.category || 'sentence',
-                        categoryName: fields.categoryName || '句子建構',
-                        description: fields.description || '暫無簡介。',
-                        link: fields.link || '#',
-                        badgeColor: badgeColor,
-                        youtubeLink: fields.youtube_link || '', 
-                        feedbackLink: fields.feedback_link || '',
-                        previewImage: imageUrl // ✨ 儲存圖片網址
-                    };
+                            id: record.id,
+                            title: fields.title || '未命名教材',
+                            category: fields.category || 'sentence',
+                            categoryName: fields.categoryName || '句子建構',
+                            description: fields.description || '暫無簡介。',
+                            link: fields.link || '#',
+                            badgeColor: badgeColor,
+                            youtubeLink: fields.youtube_link || '', 
+                            feedbackLink: fields.feedback_link || '',
+                            previewImage: imageUrl,
+                            starClaimed: fields.star_claimed === true // ✨ 新增呢行：讀取是否已領取
+                        };
                 });
 
                 document.getElementById('loading-spinner').classList.add('hidden');
@@ -367,24 +368,45 @@
             });
         }
 
-        function claimStar(btnElement) {
-            event.stopPropagation();
+       function claimStar(btn, recordId) {
+            // 1. 畫面上即時鎖死個掣，防止狂撳
+            btn.disabled = true;
+            btn.innerHTML = "⭐ 已領取";
+            btn.className = "bg-gray-200 text-gray-400 border border-gray-200 text-xs font-semibold px-3 py-1.5 rounded-lg mt-2 inline-block shadow-sm cursor-not-allowed";
+
+            // 2. 畫面上即時加星星數
             currentStars += 1;
             document.getElementById('student-stars-display').innerText = currentStars;
+
+            // 3. 放煙花微動畫 (可選)
+            btn.style.transform = "scale(1.1)";
+            setTimeout(() => btn.style.transform = "scale(1)", 200);
+
+            // 4. 背景靜靜雞通知 Airtable 打剔
+            const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_NAME)}/${recordId}`;
             
-            const starIcon = document.getElementById('star-icon');
-            starIcon.classList.add('scale-150');
-            setTimeout(() => starIcon.classList.remove('scale-150'), 300);
+            // 準備要更新嘅資料：將該教材嘅 star_claimed 設為 true
+            const data = {
+                fields: {
+                    "star_claimed": true
+                    // 如果你本身有將 currentStars 寫入 Airtable 嘅欄位，都可以喺度加埋，例如 "stars": currentStars
+                }
+            };
 
-            btnElement.disabled = true;
-            btnElement.innerText = "✅ 已領取";
-            btnElement.classList.replace('bg-yellow-400', 'bg-slate-100');
-            btnElement.classList.replace('hover:bg-yellow-500', 'text-slate-400');
-            btnElement.classList.replace('text-white', 'text-slate-400');
-            btnElement.classList.remove('shadow-sm', 'border-yellow-400');
-            btnElement.classList.add('border', 'border-slate-200', 'cursor-not-allowed');
-
-            updateStarsInAirtable(currentStars);
+            fetch(url, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    console.error("更新星星失敗！");
+                }
+            })
+            .catch(error => console.error("網絡錯誤:", error));
         }
 
         function updateStarsInAirtable(newStars) {
@@ -407,8 +429,12 @@
             grid.innerHTML = myMaterials.map(item => {
                 
                 let feedbackBtn = item.feedbackLink ? `<button onclick="openLink('${item.feedbackLink}', event)" class="bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition mt-2 mr-2 inline-block shadow-sm">📤 交功課</button>` : '';
-                let starBtn = `<button onclick="claimStar(this)" class="bg-yellow-400 hover:bg-yellow-500 text-white border border-yellow-400 text-xs font-semibold px-3 py-1.5 rounded-lg transition mt-2 inline-block shadow-sm">🌟 完成！領取星星</button>`;
-
+                let starBtn = '';
+                if (item.starClaimed) {
+                    starBtn = `<button disabled class="bg-gray-200 text-gray-400 border border-gray-200 text-xs font-semibold px-3 py-1.5 rounded-lg mt-2 inline-block shadow-sm cursor-not-allowed">⭐ 已領取</button>`;
+                } else {
+                    starBtn = `<button onclick="claimStar(this, '${item.id}')" class="bg-yellow-400 hover:bg-yellow-500 text-white border border-yellow-400 text-xs font-semibold px-3 py-1.5 rounded-lg transition mt-2 inline-block shadow-sm">🌟 完成！領取星星</button>`;
+                }
                 let hasVideo = item.youtubeLink && item.youtubeLink.trim() !== '';
                 let hasFile = item.link && item.link.trim() !== '' && item.link !== '#';
 
