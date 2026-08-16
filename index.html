@@ -369,13 +369,18 @@ currentStars = allStars.length > 0 ? Math.max(...allStars) : 0;
             });
         }
 
-       function claimStar(btn, recordId) {
+       function claimStar(btn, recordId, event) {
+            // ✨ 新增呢行：截斷點擊動作，防止佢穿透去打開教材
+            if (event) {
+                event.stopPropagation();
+            }
+
             // 1. 畫面上即時鎖死個掣，防止狂撳
             btn.disabled = true;
             btn.innerHTML = "⭐ 已領取";
             btn.className = "bg-gray-200 text-gray-400 border border-gray-200 text-xs font-semibold px-3 py-1.5 rounded-lg mt-2 inline-block shadow-sm cursor-not-allowed";
 
-            // 2. 畫面上即時加星星數
+            // (下面啲 Code 照舊，唔洗改...)
             currentStars += 1;
             document.getElementById('student-stars-display').innerText = currentStars;
 
